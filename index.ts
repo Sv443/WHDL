@@ -8,7 +8,12 @@ import helmet from "helmet";
 
 //#region >> consts
 
-const { env } = process;
+const { env, exit } = process;
+
+function criticalError(err: unknown) {
+  console.error(styleText("red", format(err)));
+  exit(1);
+}
 
 const requiredEnvVars = ["TOKENS", "ALLOWED_DIRS"];
 const missingEnvVars = requiredEnvVars.filter(v => !env[v]);
@@ -32,10 +37,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.on("error", err => {
-  console.error(styleText("red", format(err)));
-  process.exit(1);
-});
+app.on("error", err => criticalError(err));
 
 //#region >> routes
 
@@ -82,7 +84,9 @@ app.post("/download", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(styleText("green", `\nListening on port ${port}\n`)));
+const server = app.listen(port, () => console.log(styleText("green", `\nListening on port ${port}\n`)));
+
+server.on("error", err => criticalError(err));
 
 //#region >> ensureDirectoryExists
 
