@@ -32,6 +32,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.on("error", err => {
+  console.error(styleText("red", format(err)));
+  process.exit(1);
+});
+
 //#region >> routes
 
 app.post("/download", async (req, res) => {
