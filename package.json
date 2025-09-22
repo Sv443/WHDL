@@ -3,26 +3,40 @@
   "version": "0.1.0",
   "description": "Self-hosted, webhook-based, token-authenticated file downloader service.",
   "main": "index.ts",
+  "type": "module",
   "scripts": {
     "start": "tsx index.ts",
     "dev": "nodemon --watch . --ext ts --exec \"pnpm start\""
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "webhook",
+    "file",
+    "downloader",
+    "http",
+    "express",
+    "typescript",
+    "nodejs",
+    "self-hosted",
+    "web-service"
+  ],
+  "author": {
+    "name": "Sv443",
+    "url": "https://github.com/Sv443"
+  },
   "license": "MIT",
   "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "tslib": "^2.8.1"
+  },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "dotenv": "^17.2.2",
     "nodemon": "^3.1.10",
-    "tslib": "^2.8.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "helmet": "^8.1.0"
   }
 }
