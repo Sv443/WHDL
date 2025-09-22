@@ -1,11 +1,14 @@
+import { exec } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, basename, relative, resolve } from "node:path";
+import { dirname, basename, relative, resolve, join } from "node:path";
 import { format, styleText } from "node:util";
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
+import isGlob from "is-glob";
 import picomatch from "picomatch";
+import { readdirGlob } from "readdir-glob";
 
 //#region >> consts
 
@@ -45,6 +48,7 @@ app.on("error", err => criticalError(err));
 
 //#region >> download
 
+// downloads a file from a URL
 app.post("/download", async (req, res) => {
   const { url } = req.body;
 
@@ -86,8 +90,45 @@ app.post("/download", async (req, res) => {
   }
 });
 
+//#region run
+
+// runs a shell or batch script
+app.post("/run", async (req, res) => {
+  if(!verifyRequest(req, res))
+    return;
+
+  const path = await getPath(req, res);
+
+  if(!path)
+    return;
+
+  if(![".bat", ".cmd", ".sh"].some(ext => path.toLowerCase().endsWith(ext)))
+    return res.status(400).json({ error: "Wrong file type" });
+
+  try {
+    exec(`"${path}"`, (error, stdout, stderr) => {
+      if(error) {
+        console.error(styleText("red", format(error)));
+        return res.status(500).json({ error: `Internal Server Error: ${error?.message}` });
+      }
+
+      if(logRequests) {
+        const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+        console.info(`[${new Date().toISOString()}] [${ip}] Ran '${path}'`);
+      }
+
+      return res.status(200).json({ success: true, stdout, stderr });
+    });
+  }
+  catch(err) {
+    console.error(styleText("red", format(err)));
+    res.status(500).json({ error: `Internal Server Error: ${err}` });
+  }
+});
+
 //#region delete
 
+// deletes one or multiple files
 app.delete("/delete", async (req, res) => {
   if(!verifyRequest(req, res))
     return;
@@ -105,9 +146,28 @@ app.delete("/delete", async (req, res) => {
     res.status(200).json({ success: true });
   }
 
+  const pattern = req.body?.pattern;
+
   try {
-    await rm(path);
-    return success();
+    if(typeof pattern === "string" && isGlob(pattern, { strict: false })) {
+      readdirGlob(path, { pattern, absolute: true }, async (err, matches) => {
+        if(err) {
+          console.error(styleText("red", format(err)));
+          return res.status(500).json({ error: `Internal Server Error: ${err}` });
+        }
+
+        if(!matches || matches.length === 0)
+          return success();
+
+        await Promise.all(matches.map(async p => rm(p)));
+
+        return success();
+      });
+    }
+    else {
+      await rm(path);
+      return success();
+    }
   }
   catch(err) {
     if((err as { code?: string })?.code === "ENOENT")
@@ -149,7 +209,7 @@ async function getPath(req: express.Request, res: express.Response) {
     return null;
   }
 
-  if(!picomatch.isMatch(basename(path), allowedFilePatterns)) {
+  if(!picomatch.isMatch(basename(path), allowedFilePatterns) && basename(path).includes(".")) {
     res.status(403).json({ error: "File pattern not allowed" });
     return null;
   }
@@ -177,6 +237,9 @@ function isDescendantPath(path: string, parentPath: string) {
   try {
     const resolvedPath = resolve(path);
     const resolvedParentPath = resolve(parentPath);
+
+    if(resolvedPath === resolvedParentPath)
+      return true;
 
     const relativePath = relative(resolvedParentPath, resolvedPath);
 

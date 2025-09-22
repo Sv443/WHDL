@@ -6,7 +6,7 @@ Currently supports downloading and deleting files.
 
 </div>
 
-<br>
+<br><br>
 
 ## Setup
 1. Clone the repository or download and extract the ZIP (green button at the top).
@@ -16,10 +16,10 @@ Currently supports downloading and deleting files.
 5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
 
-<br>
+<br><br>
 
 ## Usage
-Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
+**To download a file**, send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
 ```json
 {
   "url": "https://example.com/file.zip",
@@ -39,9 +39,9 @@ Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON
 - If the directory does not exist, it will be created automatically.
 - Should the download take longer than 25 seconds, the request will succeed preemptively, while the download still continues in the background.
 
-<br>
+<br><br>
 
-To delete a file, send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
+**To delete one or more files**, send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
 ```json
 {
   "path": "/absolute/path/to/delete/file.zip"
@@ -49,13 +49,36 @@ To delete a file, send a DELETE request to `http://<host>:<port>/delete?token=<t
 ```
 ```json
 {
-  "path": "C:\\Users\\user\\Downloads\\example.com.html"
+  "path": "C:\\Users\\user\\Documents\\file.zip"
+}
+```
+Using a glob pattern:
+```json
+{
+  "path": "C:\\Users\\user\\Documents\\",
+  "pattern": "*.{zip,rar,tar,tar.gz}"
 }
 ```
 
 - If the file doesn't exist, the request will still succeed.
 
-<br>
+<br><br>
+
+**To execute a script**, send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body like this:
+```json
+{
+  "path": "/absolute/path/to/script.sh"
+}
+```
+```json
+{
+  "path": "C:\\Users\\user\\Documents\\unzip_file.bat"
+}
+```
+
+- Only `.bat`, `.cmd` and `.sh` files are allowed, and the file must match `ALLOWED_FILE_PATTERNS`. This feature is disabled by default, because those file extensions are not included in `.env.template`.
+
+<br><br>
 
 <div style="text-align: center;" align="center">
 
