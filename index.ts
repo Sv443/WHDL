@@ -1,10 +1,11 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { dirname, basename, relative, resolve } from "node:path";
 import { format, styleText } from "node:util";
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
+import picomatch from "picomatch";
 
 //#region >> consts
 
@@ -15,7 +16,7 @@ function criticalError(err: unknown) {
   exit(1);
 }
 
-const requiredEnvVars = ["TOKENS", "ALLOWED_DIRS"];
+const requiredEnvVars = ["TOKENS", "ALLOWED_DIRS", "ALLOWED_FILE_PATTERNS"];
 const missingEnvVars = requiredEnvVars.filter(v => !env[v]);
 
 if(missingEnvVars.length > 0) {
@@ -23,10 +24,13 @@ if(missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+const splitRegex = /[;]/g;
+
 const port = Number(env.PORT ?? 8034);
-const tokens = new Set<string>(env.TOKENS?.split(/[,;]/g).map(t => t.trim()).filter(t => t) ?? []);
-const allowedDirs = env.ALLOWED_DIRS?.split(/[,;]/g).map(p => p.trim()).filter(p => p) ?? [dirname(process.execPath)];
-const logCreatedFiles = ["true", "1"].includes(env.LOG_CREATED_FILES?.trim().toLowerCase() ?? "");
+const tokens = new Set<string>(env.TOKENS?.split(splitRegex).map(t => t.trim()).filter(t => t) ?? []);
+const allowedDirs = env.ALLOWED_DIRS?.split(splitRegex).map(p => p.trim()).filter(p => p) ?? [dirname(process.execPath)];
+const allowedFilePatterns = env.ALLOWED_FILE_PATTERNS?.split(splitRegex).map(p => p.trim()).filter(p => p) ?? [];
+const logRequests = ["true", "1"].includes(env.LOG_REQUESTS?.trim().toLowerCase() ?? "");
 
 //#region express app
 
@@ -39,26 +43,24 @@ app.use(express.urlencoded({ extended: true }));
 
 app.on("error", err => criticalError(err));
 
-//#region >> routes
+//#region >> download
 
 app.post("/download", async (req, res) => {
-  const { token } = req.query;
-  const { url, path } = req.body;
+  const { url } = req.body;
 
-  if(typeof token !== "string" || !tokens.has(token))
-    return res.status(404).end();
+  if(!verifyRequest(req, res))
+    return;
 
-  if(!url)
+  if(typeof url !== "string")
     return res.status(400).json({ error: "URL required" });
 
-  if(!path)
-    return res.status(400).json({ error: "Path required" });
+  const path = await getPath(req, res);
 
-  if(!allowedDirs.some(ancestorPath => isDescendantPath(path, ancestorPath)))
-    return res.status(403).json({ error: "Path not allowed" });
+  if(!path)
+    return;
 
   try {
-    const success = () => res.status(200).json({ success: true });
+    const success = () => res.status(201).json({ success: true });
     const to = setTimeout(success, 25_000);
 
     const resp = await fetch(url);
@@ -67,7 +69,7 @@ app.post("/download", async (req, res) => {
     await ensureDirectoryExists(path);
     await writeFile(path, buf);
 
-    if(logCreatedFiles) {
+    if(logRequests) {
       const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
       const kib = Math.round(buf.byteLength / 1024 * 100) / 100;
       const mib = Math.round(buf.byteLength / (1024 * 1024) * 100) / 100;
@@ -84,11 +86,83 @@ app.post("/download", async (req, res) => {
   }
 });
 
+//#region delete
+
+app.delete("/delete", async (req, res) => {
+  if(!verifyRequest(req, res))
+    return;
+
+  const path = await getPath(req, res);
+
+  if(!path)
+    return;
+
+  const success = () => {
+    if(logRequests) {
+      const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+      console.info(`[${new Date().toISOString()}] [${ip}] Deleted '${path}'`);
+    }
+    res.status(200).json({ success: true });
+  }
+
+  try {
+    await rm(path);
+    return success();
+  }
+  catch(err) {
+    if((err as { code?: string })?.code === "ENOENT")
+      return success();
+
+    console.error(styleText("red", format(err)));
+    res.status(500).json({ error: `Internal Server Error: ${err}` });
+  }
+});
+
+//#region >> listen
+
 const server = app.listen(port, () => console.log(styleText("green", `\nListening on port ${port}\n`)));
 
 server.on("error", err => criticalError(err));
 
-//#region >> ensureDirectoryExists
+//#region >> verifyRequest
+
+/** Verifies that the request is valid */
+function verifyRequest(req: express.Request, res: express.Response) {
+  const { token } = req.query;
+
+  if(typeof token !== "string" || !tokens.has(token)) {
+    res.status(404).end();
+    return false;
+  }
+
+  return true;
+}
+
+//#region getPathFromRequest
+
+/** Extracts the path from the request body */
+async function getPath(req: express.Request, res: express.Response) {
+  const { path } = req.body;
+
+  if(typeof path !== "string") {
+    res.status(400).json({ error: "Path required" });
+    return null;
+  }
+
+  if(!picomatch.isMatch(basename(path), allowedFilePatterns)) {
+    res.status(403).json({ error: "File pattern not allowed" });
+    return null;
+  }
+
+  if(!allowedDirs.some(ancestorPath => isDescendantPath(path, ancestorPath))) {
+    res.status(403).json({ error: "Path not allowed" });
+    return null;
+  }
+
+  return path as string;
+}
+
+//#region ensureDirectoryExists
 
 /** Ensures that the directory for `path` exists */
 async function ensureDirectoryExists(path: string) {

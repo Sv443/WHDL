@@ -1,7 +1,8 @@
 <div style="text-align: center;" align="center">
 
 # WHDL
-Self-hosted, webhook-based, token-authenticated file downloader service.
+Self-hosted, webhook-based, token-authenticated file downloader service.  
+Currently supports downloading and deleting files.
 
 </div>
 
@@ -32,10 +33,27 @@ Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON
 }
 ```
 
-- The specified `path` must be a subdirectory of one of the allowed directories specified in the comma- or semicolon-separated `ALLOWED_DIRS` environment variable (in `.env`).
-- Tokens are specified in the comma- or semicolon-separated `TOKENS` environment variable (in `.env`).
+- The specified `path` must be a subdirectory of one of the allowed directories specified in the semicolon-separated `ALLOWED_DIRS` environment variable (in `.env`).
+- Use [GLOB patterns](https://www.malikbrowne.com/blog/a-beginners-guide-glob-patterns/) in `ALLOWED_FILE_PATTERNS` (in `.env`) to restrict which files can be modified.
+- Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
 - If the directory does not exist, it will be created automatically.
 - Should the download take longer than 25 seconds, the request will succeed preemptively, while the download still continues in the background.
+
+<br>
+
+To delete a file, send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
+```json
+{
+  "path": "/absolute/path/to/delete/file.zip"
+}
+```
+```json
+{
+  "path": "C:\\Users\\user\\Downloads\\example.com.html"
+}
+```
+
+- If the file doesn't exist, the request will still succeed.
 
 <br>
 
