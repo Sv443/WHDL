@@ -10,9 +10,9 @@ Self-hosted, webhook-based, token-authenticated file downloader service.
 ## Setup
 1. Clone the repository or download and extract the ZIP (green button at the top).
 2. Install [Node.js](https://nodejs.org/) (LTS version recommended) and [npm.](https://npmjs.com/)
-3. Run `npm i` to install dependencies.
+3. Call the command `npm i` in a terminal inside the downloaded folder to install the dependencies.
 4. Copy `.env.example` to `.env` and fill out the contained environment variables as needed.
-5. Run `npm start` to start the service.  
+5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
 
 <br>
