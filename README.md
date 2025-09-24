@@ -16,7 +16,8 @@ Supports downloading and deleting files as well as calling bash or batch scripts
 5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
   
-- ⚠️ Should one of the tokens be exfiltrated, an attacker could download and execute any script with the privileges of the user that started the service. You should limit access as much as possible in `.env` and always exercise caution with that file.
+- ⚠️ Should one of the tokens be exfiltrated, an attacker could download and execute any script with the privileges of the user that started the service (if the RPC functionality was turned on).  
+  You should limit access as much as possible in `.env` and always exercise caution with that file.
 
 <br><br>
 
