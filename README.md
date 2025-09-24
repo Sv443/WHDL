@@ -42,6 +42,7 @@ Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON
 - Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
 - If the directory does not exist, it will be created automatically.
 - Should the download take longer than 25 seconds, the request will succeed preemptively, while the download still continues in the background.
+- Relative paths will be resolved based on the process working directory.
 
 <br><br>
 
@@ -66,6 +67,8 @@ Using a glob pattern:
 ```
 
 - If the no matching file is found, the request will still succeed.
+- Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
+- Relative paths will be resolved based on the process working directory.
 
 <br><br>
 
@@ -84,6 +87,8 @@ Send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body
 
 - This feature is disabled by default, because script file extensions are not included in `.env.template`'s `ALLOWED_FILE_PATTERNS`.
 - Only files ending in `.bat`, `.cmd` and `.sh` will be callable, even if other extensions are added to `ALLOWED_FILE_PATTERNS`.
+- Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
+- Relative paths will be resolved based on the process working directory.
 
 <br><br>
 
