@@ -19,7 +19,8 @@ Currently supports downloading and deleting files and calling shell or batch scr
 <br><br>
 
 ## Usage
-**To download a file**, send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
+### To download files:
+Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
 ```json
 {
   "url": "https://example.com/file.zip",
@@ -41,7 +42,8 @@ Currently supports downloading and deleting files and calling shell or batch scr
 
 <br><br>
 
-**To delete one or more files**, send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
+## To delete files:
+Send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
 ```json
 {
   "path": "/absolute/path/to/delete/file.zip"
@@ -60,11 +62,12 @@ Using a glob pattern:
 }
 ```
 
-- If the file doesn't exist, the request will still succeed.
+- If the no matching file is found, the request will still succeed.
 
 <br><br>
 
-**To execute a script**, send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body like this:
+### To execute scripts:
+Send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body like this:
 ```json
 {
   "path": "/absolute/path/to/script.sh"
@@ -76,13 +79,14 @@ Using a glob pattern:
 }
 ```
 
-- Only `.bat`, `.cmd` and `.sh` files are allowed, and the file must match `ALLOWED_FILE_PATTERNS`. This feature is disabled by default, because those file extensions are not included in `.env.template`.
+- This feature is disabled by default, because script file extensions are not included in `.env.template`'s `ALLOWED_FILE_PATTERNS`.
+- Only files ending in `.bat`, `.cmd` and `.sh` will be callable, even if other extensions are added to `ALLOWED_FILE_PATTERNS`.
 
 <br><br>
 
 <div style="text-align: center;" align="center">
 
 Copyright © 2025 Sv443 - Licensed under the [MIT License](./LICENSE.txt)  
-If you like this project, please consider [contributing financially ❤️](https://github.com/sponsors/Sv443)
+If you like my projects, please consider [supporting the development ❤️](https://github.com/sponsors/Sv443)
 
 </div>
