@@ -1,8 +1,8 @@
 <div style="text-align: center;" align="center">
 
 # WHDL
-Self-hosted, webhook-based, token-authenticated file downloader service.  
-Currently supports downloading and deleting files and calling shell or batch scripts.
+Self-hosted, webhook-based, token-authenticated file downloader and RPC service.  
+Supports downloading and deleting files as well as calling bash or batch scripts.
 
 </div>
 
@@ -15,6 +15,8 @@ Currently supports downloading and deleting files and calling shell or batch scr
 4. Copy `.env.example` to `.env` and fill out the contained environment variables as needed.
 5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
+  
+- ⚠️ Should one of the tokens be exfiltrated, an attacker could download and execute any script with the privileges of the user that started the service. You should limit access as much as possible in `.env` and always exercise caution with that file.
 
 <br><br>
 
