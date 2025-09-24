@@ -2,7 +2,7 @@
 
 # WHDL
 Self-hosted, webhook-based, token-authenticated file downloader service.  
-Currently supports downloading and deleting files.
+Currently supports downloading and deleting files and calling shell or batch scripts.
 
 </div>
 
