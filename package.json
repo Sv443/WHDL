@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx index.ts",
-    "dev": "nodemon --watch . --ext ts --exec \"pnpm start\""
+    "dev": "nodemon --watch . --ext ts --exec \"pnpm start\"",
+    "gen-token": "tsx gen-token.ts"
   },
   "keywords": [
     "webhook",

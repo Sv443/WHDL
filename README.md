@@ -16,6 +16,10 @@ Supports downloading and deleting files as well as calling bash or batch scripts
 5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
   
+### Generating tokens:
+- You can generate cryptographically strong tokens using the command `npm run gen-token`.  
+  Specify the amount and length with the optional arguments, e.g. `npm run gen-token 3 64` to generate 3 tokens with a length of 64 characters each. The default amount is 1 and the default length is 48.
+- Tokens need to be URL-safe, so I recommend only using alphanumeric characters and `-` or `_`. [Any characters **not** listed here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description) will need to be [percent-encoded](https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding) if you want to use them.
 - ⚠️ Should one of the tokens be exfiltrated, an attacker could download and execute any script with the privileges of the user that started the service (if the RPC functionality was turned on).  
   You should limit access as much as possible in `.env` and always exercise caution with that file.
 

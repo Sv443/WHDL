@@ -28,11 +28,12 @@ if(missingEnvVars.length > 0) {
 }
 
 const splitRegex = /[;]/g;
+const filterStr = (s: string) => s.length > 0;
 
 const port = Number(env.PORT ?? 8034);
-const tokens = new Set<string>(env.TOKENS?.split(splitRegex).map(t => t.trim()).filter(t => t) ?? []);
-const allowedDirs = env.ALLOWED_DIRS?.split(splitRegex).map(p => p.trim()).filter(p => p) ?? [dirname(process.execPath)];
-const allowedFilePatterns = env.ALLOWED_FILE_PATTERNS?.split(splitRegex).map(p => p.trim()).filter(p => p) ?? [];
+const tokens = new Set<string>(env.TOKENS?.split(splitRegex).map(t => t.trim()).filter(filterStr) ?? []);
+const allowedDirs = env.ALLOWED_DIRS?.split(splitRegex).map(p => p.trim()).filter(filterStr) ?? [dirname(process.execPath)];
+const allowedFilePatterns = env.ALLOWED_FILE_PATTERNS?.split(splitRegex).map(p => p.trim()).filter(filterStr) ?? [];
 const logRequests = ["true", "1"].includes(env.LOG_REQUESTS?.trim().toLowerCase() ?? "");
 
 //#region express app
