@@ -29,8 +29,8 @@ Supports downloading and deleting files as well as calling bash or batch scripts
 <br><br>
 
 ## Usage
-### To download files:
-Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
+### Download files:
+Send a `POST` request to `http://<host>:<port>/download?token=<token>` with a JSON body like this:
 ```json
 {
   "url": "https://example.com/file.zip",
@@ -53,8 +53,8 @@ Send a POST request to `http://<host>:<port>/download?token=<token>` with a JSON
 
 <br><br>
 
-## To delete files:
-Send a DELETE request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
+### Delete files:
+Send a `DELETE` request to `http://<host>:<port>/delete?token=<token>` with a JSON body like this:
 ```json
 {
   "path": "/absolute/path/to/delete/file.zip"
@@ -73,14 +73,15 @@ Using a glob pattern:
 }
 ```
 
-- If the no matching file is found, the request will still succeed.
+- If no matching file is found, the request will still succeed.
+- The specified `path` must be a subdirectory of one of the allowed directories specified in the semicolon-separated `ALLOWED_DIRS` environment variable (in `.env`).
 - Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
 - Relative paths will be resolved based on the process working directory.
 
 <br><br>
 
-### To execute scripts:
-Send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body like this:
+### Execute scripts (RPC):
+Send a `POST` request to `http://<host>:<port>/run?token=<token>` with a JSON body like this:
 ```json
 {
   "path": "/absolute/path/to/script.sh"
@@ -94,6 +95,7 @@ Send a POST request to `http://<host>:<port>/run?token=<token>` with a JSON body
 
 - This feature is disabled by default, because script file extensions are not included in `.env.template`'s `ALLOWED_FILE_PATTERNS`.
 - Only files ending in `.bat`, `.cmd` and `.sh` will be callable, even if other extensions are added to `ALLOWED_FILE_PATTERNS`.
+- The specified `path` must be a subdirectory of one of the allowed directories specified in the semicolon-separated `ALLOWED_DIRS` environment variable (in `.env`).
 - Tokens are specified in the semicolon-separated `TOKENS` environment variable (in `.env`).
 - Relative paths will be resolved based on the process working directory.
 
