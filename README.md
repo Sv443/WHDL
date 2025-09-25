@@ -16,6 +16,9 @@ Supports downloading and deleting files as well as calling bash or batch scripts
 5. Call the command `npm start` to start the service.  
   Use something like [pm2](https://pm2.keymetrics.io/), [systemd](https://wiki.archlinux.org/title/systemd) or [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to start it automatically at system startup.
   
+- To use HTTPS, specify the paths to your `.crt` and `.key` files in `.env` and adjust the `PORT` variable if needed.  
+  Use something like [Let's Encrypt](https://letsencrypt.org/) or [Cloudflare](https://www.cloudflare.com/) to get a free, trusted TLS certificate.
+  
 ### Generating tokens:
 - You can generate cryptographically strong tokens using the command `npm run gen-token`.  
   Specify the amount and length with the optional arguments, e.g. `npm run gen-token 3 64` to generate 3 tokens with a length of 64 characters each. The default amount is 1 and the default length is 48.

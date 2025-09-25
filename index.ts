@@ -1,7 +1,9 @@
 import { exec } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, basename, relative, resolve, join } from "node:path";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { dirname, basename, relative, resolve } from "node:path";
 import { format, styleText } from "node:util";
+import { createServer as createHTTPServer } from "http";
+import { createServer as createHTTPSServer } from "https";
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
@@ -24,7 +26,7 @@ const missingEnvVars = requiredEnvVars.filter(v => !env[v]);
 
 if(missingEnvVars.length > 0) {
   console.error(styleText("red", `Missing required environment variable${missingEnvVars.length === 1 ? "" : "s"}: ${missingEnvVars.join(", ")}`));
-  process.exit(1);
+  exit(1);
 }
 
 const splitRegex = /[;]/g;
@@ -35,6 +37,25 @@ const tokens = new Set<string>(env.TOKENS?.split(splitRegex).map(t => t.trim()).
 const allowedDirs = env.ALLOWED_DIRS?.split(splitRegex).map(p => p.trim()).filter(filterStr) ?? [dirname(process.execPath)];
 const allowedFilePatterns = env.ALLOWED_FILE_PATTERNS?.split(splitRegex).map(p => p.trim()).filter(filterStr) ?? [];
 const logRequests = ["true", "1"].includes(env.LOG_REQUESTS?.trim().toLowerCase() ?? "");
+const certPath = env.HTTPS_CERTIFICATE_PATH?.trim();
+const privkeyPath = env.HTTPS_PRIVATE_KEY_PATH?.trim();
+
+const useHTTPS = typeof certPath === "string" && certPath.length > 0 && typeof privkeyPath === "string" && privkeyPath.length > 0;
+
+if(tokens.size === 0) {
+  console.error(styleText("red", "No valid tokens found in 'TOKENS'"));
+  exit(1);
+}
+
+if(allowedDirs.length === 0) {
+  console.error(styleText("red", "No valid directories found in 'ALLOWED_DIRS'"));
+  exit(1);
+}
+
+if(allowedFilePatterns.length === 0) {
+  console.error(styleText("red", "No valid file patterns found in 'ALLOWED_FILE_PATTERNS'"));
+  exit(1);
+}
 
 //#region express app
 
@@ -46,6 +67,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.on("error", err => criticalError(err));
+
+let key: string | undefined, cert: string | undefined;
+
+if(useHTTPS) {
+  try {
+    key = String(await readFile(privkeyPath!));
+    cert = String(await readFile(certPath!));
+  }
+  catch(err) {
+    console.error(styleText("red", `Failed to read HTTPS key or certificate:\n`) + err);
+    exit(1);
+  }
+}
+
+const server = useHTTPS
+  ? createHTTPSServer({ key, cert }, app)
+  : createHTTPServer(app);
+
+server.on("error", err => criticalError(err));
 
 //#region >> download
 
@@ -181,9 +221,7 @@ app.delete("/delete", async (req, res) => {
 
 //#region >> listen
 
-const server = app.listen(port, () => console.log(styleText("green", `\nListening on port ${port}\n`)));
-
-server.on("error", err => criticalError(err));
+server.listen(port, () => console.log(styleText("green", `\nListening on port ${port}\n`)));
 
 //#region >> verifyRequest
 
