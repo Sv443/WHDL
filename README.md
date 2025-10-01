@@ -2,7 +2,9 @@
 
 # WHDL
 Self-hosted, webhook-based, token-authenticated file downloader and RPC service.  
-Supports downloading and deleting files as well as calling bash or batch scripts.
+  
+Supports downloading and deleting files as well as calling bash or batch scripts.  
+Uses the middlewares [helmet](https://www.npmjs.com/package/helmet) for security and [cors](https://www.npmjs.com/package/cors) to allow cross-origin web requests.
 
 </div>
 
